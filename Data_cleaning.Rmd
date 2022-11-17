@@ -1,0 +1,170 @@
+---
+title: "Irisk_data_cleaning"
+author: "JialongLi"
+date: "11/15/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Data_Cleaning
+
+## Import necessary packages
+```{r include = false}
+library(tidyverse)
+library(stringr)
+library(readxl)
+library(data.table)
+```
+
+```{r}
+dt_boston = fread('C:/Users/jialong/Desktop/IRISK/AfterMid_02/boston, massachusetts.csv')
+dt_cambridge = fread('C:/Users/jialong/Desktop/IRISK/AfterMid_02/cambridge, massachusetts.csv')
+dim(dt_boston)
+dim(dt_cambridge)
+```
+
+```{r}
+# sample 300 rows 
+# do I really need to sample?
+# the more the better? or it's not that case?
+dt_s1 = dt_boston[][][sample(.N,300)]
+dt_s2 = dt_cambridge[][][sample(.N,300)]
+```
+
+```{r}
+# shuffle columns
+set.seed(447)
+indexes = sample(c(1:75), 75, replace = FALSE)
+dt_shuffled_1 = dt_s1[,..indexes]
+
+set.seed(744)
+indexes = sample(c(1:75), 75, replace = FALSE)
+dt_shuffled_2 = dt_s2[,..indexes]
+```
+
+```{r}
+# first line first row, can't know its data type
+dt_shuffled_1[1,1]
+# first line first row's value, this is ok
+dt_shuffled_1[[1,1]]
+# type get
+class(dt_shuffled_1[[1,1]])
+typeof(dt_shuffled_1[[1,1]])
+mode(dt_shuffled_1[[1,1]])
+
+length(dt_shuffled_1)
+
+# get all data type
+FindDataType = function(dt) {
+  # avoid reallocation
+  right_most = length(dt_shuffled_1)
+  result = rep(NA,right_most)
+  for (i in 1:right_most) {
+    result[i] = typeof(dt[[1,i]])
+  }
+  result
+}
+
+FindDataType(dt_shuffled_1)
+FindDataType(dt_shuffled_2)
+
+unique(FindDataType(dt_shuffled_1))
+# as we can see, we have integer, double, character and logical.
+```
+
+```{r}
+# since entity resolution for "string“ data type is well-estiblished, and out project ir focused on numeric data, we will consider removing these data whose data type is "character". 
+FindStringColumns = function(dt) {
+  right_most = length(dt_shuffled_1)
+  result = c()
+  for (i in 1:right_most) {
+    type = typeof(dt[[1,i]])
+    if (type == "character" | type == "list")
+    result = append(result, i)
+  }
+  result
+}
+
+indexes_string_1 = FindStringColumns(dt_shuffled_1)
+indexes_string_2 = FindStringColumns(dt_shuffled_2)
+
+dt_shuffled_1[,..indexes_string_1]
+dt_shuffled_2[,..indexes_string_2]
+```
+
+```{r}
+# As we can see, some columns is saveable and we may do not want to drop.
+
+# For example, the "host_response_time" column
+dt_shuffled_1[["host_response_time"]]
+unique(dt_shuffled_1[["host_response_time"]])
+# it have 5 values -> within an hour, N/A, a few days or more, within a few hours, within a day.
+# we can convert them to factor, but actually, I don't think it's a good idea. Based on my understanding, keeping it as "string" will more ideal, because the accuracy can be higher.
+
+# However, we do want to conversion in the following case:
+dt_shuffled_1[["has_availability"]]
+# as you can see, it's binary data that we need to factorize.
+```
+
+```{r}
+# find not only string, but also binary columns
+StringAndBinary = function(dt) {
+  right_most = length(dt_shuffled_1)
+  result = c()
+  for (i in 1:right_most) {
+    varies = nrow(unique(dt[,..i]))
+    type = typeof(dt[[1,i]])
+    if (varies == 2 & type == "character")
+    result = append(result, i)
+  }
+  result
+}
+
+indexes_sb1 = StringAndBinary(dt_shuffled_1)
+indexes_sb2 = StringAndBinary(dt_shuffled_2)
+
+dt_shuffled_1[,..indexes_sb1]
+dt_shuffled_2[,..indexes_sb2]
+#  dt_shuffled_2 -> all host_has_profile_pic == t
+```
+```{r}
+# to factor!
+dt_shuffled_1[,..indexes_sb1]
+dt_shuffled_2[,..indexes_sb2]
+
+df_1 = as.data.frame(dt_shuffled_1)
+df_2 = as.data.frame(dt_shuffled_2)
+
+for (i in indexes_sb1) {
+  df_1[,i] = as.numeric(df_1[,i] == "t")
+}
+
+for (i in indexes_sb2) {
+  df_2[,i] = as.numeric(df_2[,i] == "t")
+}
+
+dt_shuffled_1 = as.data.table(df_1)
+dt_shuffled_2 = as.data.table(df_2)
+
+index_remove_1 = indexes_string_1[!indexes_string_1 %in% indexes_sb1]
+index_remove_2 = indexes_string_2[!indexes_string_2 %in% indexes_sb2]
+
+#length(indexes_string_1[!indexes_string_1 %in% indexes_sb1])
+```
+
+```{r}
+# drop unmatchable
+```
+
+```{r}
+output_1 = dt_shuffled_1[,-..index_remove_1]
+output_2 = dt_shuffled_2[,-..index_remove_2]
+
+write.csv(output_1, "C:/Users/jialong/Desktop/IRISK/AfterMid_02/airbnb1.csv")
+write.csv(output_2, "C:/Users/jialong/Desktop/IRISK/AfterMid_02/airbnb2.csv")
+```
+
+
+
