@@ -1,0 +1,19 @@
+Package: FeatureAlignment
+Type: Package
+Title: Feature Alignment for Vertical Federated Learning
+Version: 0.1.0
+Author: Jialong Li, Zekun Li
+Maintainer: The package maintainer <jialong7@illinois.edu>
+Description: A naive R package for entity resolution
+License: MIT
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    data.table,
+    dlookr,
+    dplyr,
+    lsa,
+    stringi,
+    stringr,
+    ggplot2
+RoxygenNote: 7.2.2

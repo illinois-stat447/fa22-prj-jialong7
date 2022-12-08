@@ -1,0 +1,82 @@
+---
+title: "R_package_test"
+author: "JialongLi"
+date: "2022-12-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# autoblock
+
+## package importing
+```{r, include = false, message = false}
+library(FeatureAlignment)
+```
+
+## read the data
+```{r}
+# run this code (1)
+# testcase
+# airbnb
+dt_boston = fread('boston, massachusetts.csv')
+dt_cambridge = fread('cambridge, massachusetts.csv')
+dim(dt_boston)
+dim(dt_cambridge)
+```
+
+Data from airbnb, try the auto_blocking function.
+Our method can work when feature name unknown, and the company provides only partical examples.
+Suppose they only provides 500 rows of data.
+
+```{r}
+# run this code (2) - partical data
+# testcase
+set.seed(12)
+dt_s1 = dt_boston[][sample(.N,500)]
+set.seed(34)
+dt_s2 = dt_cambridge[][sample(.N,500)]
+```
+
+
+```{r}
+# FindUnmatchable = function(dt) 
+# FindTime = function(dt) 
+# FindInteger = function(dt)
+# FindDouble = function(dt) 
+# FindString = function(dt)
+# --->
+# BaseBlock
+
+# test:
+# find Unmatchable
+temp1 = BaseBlock(dt_s1,"Unmatchable")
+dt_s1[,..temp1]
+
+# Time
+temp2 = BaseBlock(dt_s1,"Time")
+dt_s1[,..temp2]
+
+# string
+temp3 = BaseBlock(dt_s1,"String")
+dt_s1[,..temp3]
+
+# Int
+temp4 = BaseBlock(dt_s1,"Int")
+dt_s1[,..temp4]
+
+# Double
+temp5 = BaseBlock(dt_s1,"Double")
+dt_s1[,..temp5]
+
+# ALL
+temp6 = BaseBlock(dt_s1)
+
+all = c(temp1,temp2,temp3,temp4,temp5)
+sort(all)
+length(all)
+
+all
+```
