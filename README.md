@@ -5,10 +5,10 @@
 ## Key functions in FeatureAlignment:
 
 ### Blocking Functions: 
-**BaseBlock**  
+**BaseBlock()**  
 Automatically block the input dataset into five different clusters, which are "Unmatchable", "Int", "Double", "Time", and "String". 
 
-**AdvancedBlock**  
+**AdvancedBlock()**  
 Take "int", "double", "string" data as input, and return "Binary", "Categorical_not_binary", and "Neither" (Purely Numeric) features.
 
 Blocking functions can reduce the complexity of the algorithm, because the most of time only "binary" features and "binary" features but not "binary" features and "string" features will match each other. We do not want to go through all the features in the dataset.
@@ -20,9 +20,9 @@ We explored Wasserstein distance, KS (Kolmogorov–Smirnov) test, KL (Kullback-L
 
 For the string matching issue, we use cosine similarity as our metric.
 
-**KSFeatureComparison**
+**KSFeatureComparison()**
 This function takes two numerical vectors and one optional argument "input sample size" (for sampling). Output is a graph of their density plots and returns the result of KS test.
 
-**AutoMatching**
+**AutoMatching()**
 This function returns the ultimate feature-wise matching result for two input datasets. Features will be blocked first (automatically) and then do the matching. Users may customize the function by specifying the optional parameters (sample size numeric, sample size string, and characters to match) to increase matching accuracy.
 
