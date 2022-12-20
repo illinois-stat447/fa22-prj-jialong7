@@ -184,8 +184,8 @@ BaseBlock = function(dt, type = "All") {
 #' @export
 #'
 AdvancedBlock = function(dt, type) {
-  binary <- c()
-  categorical_not_binary <- c()
+  Binary <- c()
+  Categorical_not_binary <- c()
   Neither <- c()
   Int = BaseBlock(dt,"Int")
   Double = BaseBlock(dt,"Double")
@@ -202,11 +202,11 @@ AdvancedBlock = function(dt, type) {
     varies = nrow(unique(feature))
     # consider t, f, NULL
     if (type == "Binary" & varies == 2) {
-      binary = append(binary, selected_index[i])
+      Binary = append(Binary, selected_index[i])
     }
     threshold = nrow(dt) / 20
     if (type == "Categorical not Binary" & varies > 2 & varies <= threshold) {
-      categorical_not_binary = append(categorical_not_binary, selected_index[i])
+      Categorical_not_binary = append(Categorical_not_binary, selected_index[i])
     }
     if (type == "Neither" & varies > threshold) {
       Neither = append(Neither, selected_index[i])
@@ -214,10 +214,10 @@ AdvancedBlock = function(dt, type) {
   }
   Neither_droped = Neither[!Neither %in% String]
   if (type == "Binary") {
-    return(binary)
+    return(Binary)
   }
   if (type == "Categorical not Binary") {
-    return(categorical_not_binary)
+    return(Categorical_not_binary)
   }
   if (type == "Neither") {
     return(Neither_droped)
@@ -234,8 +234,8 @@ AdvancedBlock = function(dt, type) {
 #' @return a map
 #' @export
 #'
-visual_inspect_returns_ks_test_result = function(feature1, feature2, input_sample_size = 100) {
-  get_numeric_dataframe = function(x, center_data = FALSE) {
+KSFeatureComparison = function(feature1, feature2, input_sample_size = 100) {
+  GetNumericDataframe = function(x, center_data = FALSE) {
     # get rid of anything that's not digit or "." or "-", because numerical values could have "." or negative signs.
     x = gsub("[^[:digit:], ^., ^-]", "", x)
     # get rid of ","
@@ -251,9 +251,9 @@ visual_inspect_returns_ks_test_result = function(feature1, feature2, input_sampl
   actual_sample_size = min(input_sample_size, max_sample_size)
   feature1_sampled = sample(feature1, actual_sample_size)
   feature2_sampled = sample(feature2, actual_sample_size)
-  col1 = get_numeric_dataframe(feature1_sampled)
+  col1 = GetNumericDataframe(feature1_sampled)
   names(col1) = "feature1"
-  col2 = get_numeric_dataframe(feature2_sampled)
+  col2 = GetNumericDataframe(feature2_sampled)
   names(col2) = "feature2"
   df = data.frame(first_feature = col1, second_feature = col2)
   x_label = paste("Sampled", as.character(actual_sample_size), "values")
@@ -281,12 +281,12 @@ visual_inspect_returns_ks_test_result = function(feature1, feature2, input_sampl
 #' @return a vector of matching result
 #' @export
 #'
-find_best_match_based_on_KS_test = function(dt1, dt2, input_sample_size = 500, type) {
+KSFindBest = function(dt1, dt2, input_sample_size = 500, type) {
 
   # This helper function compare one feature from the first data_table to all the features in the second data_table; and calculate the p-value from ks.test. It returns the index of the maximum p-value.
   # Usage: type = "Int" or "Double"
 
-  find_best_index = function(current_feature, numeric_indexes, input_sample_size) {
+  FindBestIndex = function(current_feature, numeric_indexes, input_sample_size) {
     # numeric_indexes is the indexes of the numerical columns of the second data_table
     # initialize a "ks_results" vector to store the indexes
     ks_results = numeric(length(numeric_indexes))
@@ -306,7 +306,7 @@ find_best_match_based_on_KS_test = function(dt1, dt2, input_sample_size = 500, t
   # create a vector to store the mapping
   mapping = numeric(length(dt1))
   for(i in numeric_indexes_dt1) {
-    mapping[i] = find_best_index(current_feature = dt1[[i]], numeric_indexes = numeric_indexes_dt2, input_sample_size)
+    mapping[i] = FindBestIndex(current_feature = dt1[[i]], numeric_indexes = numeric_indexes_dt2, input_sample_size)
   }
   return(mapping)
 }
@@ -320,7 +320,7 @@ find_best_match_based_on_KS_test = function(dt1, dt2, input_sample_size = 500, t
 #' @return a numeric vector recording the number of occurrence of each character in characters_to_match
 #' @export
 #'
-get_occurrence_num = function(char_feature, characters_to_match = letters, input_sample_size = 500) {
+GetOccurrenceNum = function(char_feature, characters_to_match = letters, input_sample_size = 500) {
   actual_sample_size = min(input_sample_size, length(char_feature))
   occurrence_vec = numeric(length(characters_to_match))
   char_feature_sampled = as.character(sample(char_feature, actual_sample_size))
@@ -340,15 +340,15 @@ get_occurrence_num = function(char_feature, characters_to_match = letters, input
 #' @return data frame
 #' @export
 #'
-get_occurrence_matrix_as_df = function(dt, characters_to_match = letters, input_sample_size = 500) {
+GetOccurrenceMatrixAsDF = function(dt, characters_to_match = letters, input_sample_size = 500) {
   char_indexes = FindString(dt)
   occurrence_matrix_df = as_tibble(matrix(nrow = length(characters_to_match), ncol = length(char_indexes)))
   for (i in seq_along(char_indexes)) {
     temp_index = char_indexes[[i]]
-    to_append = get_occurrence_num(dt[[temp_index]], characters_to_match = characters_to_match, input_sample_size = input_sample_size)
+    to_append = GetOccurrenceNum(dt[[temp_index]], characters_to_match = characters_to_match, input_sample_size = input_sample_size)
     occurrence_matrix_df[i] = to_append
   }
-  #colnames(occurrence_matrix_df) = names(char_indexes)
+  # colnames(occurrence_matrix_df) = names(char_indexes)
   return(occurrence_matrix_df)
 }
 
@@ -362,16 +362,16 @@ get_occurrence_matrix_as_df = function(dt, characters_to_match = letters, input_
 #' @return a numeric vector of the same length(dt1)
 #' @export
 #'
-find_best_match_character_features = function(dt1, dt2, characters_to_match = letters, sample_size = 500) {
+FindBestCharFeatures = function(dt1, dt2, characters_to_match = letters, sample_size = 500) {
   char_indexes1 = FindString(dt1)
   char_indexes2 = FindString(dt2)
-  occrurrence_matrix1 = get_occurrence_matrix_as_df(dt = dt1, characters_to_match = characters_to_match)
-  occrurrence_matrix2 = get_occurrence_matrix_as_df(dt = dt2, characters_to_match = characters_to_match)
+  occrurrence_matrix1 = GetOccurrenceMatrixAsDF(dt = dt1, characters_to_match = characters_to_match)
+  occrurrence_matrix2 = GetOccurrenceMatrixAsDF(dt = dt2, characters_to_match = characters_to_match)
   cosine_values = numeric(length = length(dt2))
   mapping = numeric(length(dt1))
   for (j in seq_along(char_indexes1)) {
     for (i in seq_along(char_indexes2)) {
-      cosine_values[i] = calculate_cosine(occrurrence_matrix1[[j]], occrurrence_matrix2[[i]])
+      cosine_values[i] = CalculateCosine(occrurrence_matrix1[[j]], occrurrence_matrix2[[i]])
     }
     mapping[char_indexes1[j]] = char_indexes2[which.max(cosine_values)]
   }
@@ -386,7 +386,7 @@ find_best_match_character_features = function(dt1, dt2, characters_to_match = le
 #' @return a numeric vector of lengh 1; the value is between 0 and 1
 #' @export
 #'
-calculate_cosine = function(vec1, vec2) {
+CalculateCosine = function(vec1, vec2) {
   return(cosine(x = vec1, y = vec2))
 }
 
@@ -401,11 +401,11 @@ calculate_cosine = function(vec1, vec2) {
 #' @return returns a numeric vector of length equal to length(dt1); c(3,0,1) means the first column in dt1 matched with the third column in dt2, the second column in dt1 couldn't be matched with any column in dt2, and the third column in dt1 is matched with the first column on dt2.
 #' @export
 #'
-auto_matching = function(dt1, dt2, sample_size_numeric = 500, sample_size_string = 500, characters_to_match = letters) {
-  matching_double = suppressWarnings(find_best_match_based_on_KS_test(dt1 = dt1, dt2 = dt2, type = "Double", input_sample_size = sample_size_numeric))
-  matching_int = suppressWarnings(find_best_match_based_on_KS_test(dt1 = dt1, dt2 = dt2, type = "Int", input_sample_size = sample_size_numeric))
+AutoMatching = function(dt1, dt2, sample_size_numeric = 500, sample_size_string = 500, characters_to_match = letters) {
+  matching_double = suppressWarnings(KSFindBest(dt1 = dt1, dt2 = dt2, type = "Double", input_sample_size = sample_size_numeric))
+  matching_int = suppressWarnings(KSFindBest(dt1 = dt1, dt2 = dt2, type = "Int", input_sample_size = sample_size_numeric))
   matching_numeric = matching_double + matching_int
-  matching_string = suppressWarnings(find_best_match_character_features(dt1 = dt1, dt2 = dt2, characters_to_match = characters_to_match))
+  matching_string = suppressWarnings(FindBestCharFeatures(dt1 = dt1, dt2 = dt2, characters_to_match = characters_to_match))
   matching_all = matching_numeric + matching_string
   return(matching_all)
 }

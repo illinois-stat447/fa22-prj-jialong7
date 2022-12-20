@@ -9,6 +9,19 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+# useful tools
+pacman::p_load(
+  devtools,
+  usethis,
+  roxygen2,
+  testthat,
+  knitr,
+  rmarkdown
+)
+```
+
+
 # autoblock
 
 ## package importing
@@ -17,21 +30,21 @@ library(FeatureAlignment)
 ```
 
 ## read the data
+```{r, include=FALSE}
+library(data.table)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(dlookr)
+library(dplyr)
+library(lsa)
+```
+
 ```{r}
-# run this code (1)
-# testcase
-# airbnb
 dt_boston = fread('boston, massachusetts.csv')
 dt_cambridge = fread('cambridge, massachusetts.csv')
 dim(dt_boston)
 dim(dt_cambridge)
-```
-
-Data from airbnb, try the auto_blocking function.
-Our method can work when feature name unknown, and the company provides only partical examples.
-Suppose they only provides 500 rows of data.
-
-```{r}
 # run this code (2) - partical data
 # testcase
 set.seed(12)
@@ -42,31 +55,22 @@ dt_s2 = dt_cambridge[][sample(.N,500)]
 
 
 ```{r}
-# FindUnmatchable = function(dt) 
-# FindTime = function(dt) 
-# FindInteger = function(dt)
-# FindDouble = function(dt) 
-# FindString = function(dt)
 # --->
 # BaseBlock
-
+?BaseBlock
 # test:
 # find Unmatchable
 temp1 = BaseBlock(dt_s1,"Unmatchable")
 dt_s1[,..temp1]
-
 # Time
 temp2 = BaseBlock(dt_s1,"Time")
 dt_s1[,..temp2]
-
 # string
 temp3 = BaseBlock(dt_s1,"String")
 dt_s1[,..temp3]
-
 # Int
 temp4 = BaseBlock(dt_s1,"Int")
 dt_s1[,..temp4]
-
 # Double
 temp5 = BaseBlock(dt_s1,"Double")
 dt_s1[,..temp5]
@@ -77,6 +81,53 @@ temp6 = BaseBlock(dt_s1)
 all = c(temp1,temp2,temp3,temp4,temp5)
 sort(all)
 length(all)
-
-all
 ```
+
+```{r}
+# visualize double
+temp_double1 = BaseBlock(dt_s1,"Double")
+dt_s1[,48]
+temp_double2 = BaseBlock(dt_s2,"Double")
+dt_s2[,48]
+
+KSFeatureComparison(as.matrix(dt_s1[,48]), as.matrix(dt_s2[,48]))
+```
+
+```{r}
+# visualize int
+temp_int1 = BaseBlock(dt_s1,"Int")
+temp_int2 = BaseBlock(dt_s2,"Int")
+
+KSFeatureComparison(as.matrix(dt_s1[,24]), as.matrix(dt_s2[,24]))
+```
+
+```{r}
+# Testing
+# increasing "input_sample_size" generally leads to better results but slower calculation time
+matching_result = KSFindBest(dt1 = dt_boston, dt2 = dt_cambridge, input_sample_size = 500, type = "Int")
+names(dt_boston) == names(dt_cambridge) # the two sample datasets have features aligned well
+# calculate matching accuracy (obsolete)
+sum(matching_result == 1:75) / sum(matching_result != 0)
+
+# calculate matching accuracy ---double
+boston_double = BaseBlock(dt_boston, type = "Double")
+cambridge_double = BaseBlock(dt_cambridge, type = "Double")
+matching_result2 = KSFindBest(dt1 = dt_boston, dt2 = dt_cambridge, input_sample_size = 500,type = "Double")
+sum(matching_result2 == 1:75) / length(cambridge_double) #0.7857143
+
+# calculate matching accuracy ---int
+boston_int = BaseBlock(dt_boston, type = "Int")
+cambridge_int = BaseBlock(dt_cambridge, type = "Int")
+
+matching_result3 = KSFindBest(dt1 = dt_boston, dt2 = dt_cambridge, input_sample_size = 500, type = "Int")
+
+sum(matching_result3 == 1:length(matching_result3)) / length(matching_result3) #0.9130435
+
+# overall accuracy 
+numerical_matching = matching_result2 + matching_result3
+sum(numerical_matching == 1:75) # 30
+(length(boston_int) + length(boston_double)) #37
+# got 30/37 numerical features correct -> 81.08%
+```
+
+
