@@ -12,7 +12,7 @@ Take "int", "double", "string" data as input, and return "Binary", "Categorical_
 
 Blocking functions can reduce the complexity of the algorithm, because the most of time only "binary" features and "binary" features but not "binary" features and "string" features will match each other. We do not want to go through all the features in the dataset.
 
-Moreover, it can help us customize different matching algorithms for different data structures, hence improving the accuracy of the alogorithm.
+Moreover, it can help us customize different matching algorithms for different data structures, hence improving the accuracy of the algorithm.
 
 ### Comparison Functions: 
 We explored Wasserstein distance, KS (Kolmogorov–Smirnov) test, KL (Kullback-Leibler) divergency, JS (Jensen-Shannon) divergency, in which KS test gives us the best result. Therefore, we mainly use KS test to do the numeric matching works.
