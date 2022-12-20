@@ -26,6 +26,6 @@ This function takes two numerical vectors and one optional argument "input sampl
 This function returns the ultimate feature-wise matching result for two input datasets. Features will be blocked first (automatically) and then do the matching. Users may customize the function by specifying the optional parameters (sample size numeric, sample size string, and characters to match) to increase matching accuracy.
 
 ## Team
-Jialong Li, UIUC
-Zekun Li, UIUC
+- Jialong Li, UIUC  
+- Zekun Li, UIUC
 
