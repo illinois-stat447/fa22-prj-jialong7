@@ -1,4 +1,4 @@
-# FeatureAlignment R Package
+# Feature Alignment R Package
 *This is an R package for feature alignment issues in vertical federated learning, we named it "FeatureAlignment"*
 
 ## Key functions in FeatureAlignment:
